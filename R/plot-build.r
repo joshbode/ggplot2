@@ -50,6 +50,29 @@ ggplot_build <- function(plot) {
   panel <- train_position(panel, data, scale_x(), scale_y())
   data <- map_position(panel, data, scale_x(), scale_y())
   
+  # scrub any panels that aren't required after geom subsetting
+  dense_rank <- function(x) {
+    u <- unique(x)
+    return(rank(u)[match(x, u)])
+  }
+
+  panel_subset <- unique(unlist(lapply(data, function(x) { x$PANEL })))
+
+  # check if all panels are being used
+  if (!all(panel$layout$PANEL %in% panel_subset)) {
+    # rejig layout to remove empty panels
+    panel$layout <- within(subset(panel$layout, PANEL %in% panel_subset), {
+      PANEL <- factor(PANEL)
+      ROW <- dense_rank(ROW)
+      COL <- dense_rank(COL)
+    })
+    data <- lapply(data, function(x) {
+      within(x, {
+        PANEL <- factor(PANEL, levels=levels(panel$layout$PANEL))
+      })
+    })
+  }
+
   # Apply and map statistics
   data <- calculate_stats(panel, data, layers)
   data <- dlapply(function(d, p) p$map_statistic(d, plot)) 
