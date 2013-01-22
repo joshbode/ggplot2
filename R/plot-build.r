@@ -59,18 +59,23 @@ ggplot_build <- function(plot) {
   panel_subset <- unique(unlist(lapply(data, function(x) { x$PANEL })))
 
   # check if all panels are being used
-  if (plot$facet$drop & !all(panel$layout$PANEL %in% panel_subset)) {
+  if (!is(plot$facet, 'null') &&
+      plot$facet$drop &&
+      !all(panel$layout$PANEL %in% panel_subset)) {
+
     # rejig layout to remove empty panels
     panel$layout <- within(subset(panel$layout, PANEL %in% panel_subset), {
       PANEL <- factor(PANEL)
       ROW <- dense_rank(ROW)
       COL <- dense_rank(COL)
     })
+
     data <- lapply(data, function(x) {
       within(x, {
         PANEL <- factor(PANEL, levels=levels(panel$layout$PANEL))
       })
     })
+
   }
 
   # Apply and map statistics
