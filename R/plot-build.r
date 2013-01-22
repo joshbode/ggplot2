@@ -59,7 +59,7 @@ ggplot_build <- function(plot) {
   panel_subset <- unique(unlist(lapply(data, function(x) { x$PANEL })))
 
   # check if all panels are being used
-  if (!all(panel$layout$PANEL %in% panel_subset)) {
+  if (plot$facet$drop & !all(panel$layout$PANEL %in% panel_subset)) {
     # rejig layout to remove empty panels
     panel$layout <- within(subset(panel$layout, PANEL %in% panel_subset), {
       PANEL <- factor(PANEL)
